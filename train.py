@@ -5,7 +5,7 @@ avoid any global variables.
 import torch
 from model import Model
 from model_executables import train_model_wandb
-import losess as L
+import losses as L
 from torchvision.datasets import Cityscapes
 from argparse import ArgumentParser
 import torchvision.transforms as transforms
