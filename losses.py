@@ -3,32 +3,31 @@ import torch.nn as nn
 
 
 class DiceLoss(nn.Module):
-    def __init__(self, ingore_index=255):
+    def __init__(self, ignore_index=255, log_loss=False):
         super(DiceLoss, self).__init__()
-        self.ingore_index = ingore_index
+        self.ingore_index = ignore_index
+        self.log_loss = log_loss
 
     def forward(self, input, target):
         smooth = 1.
 
-        valid = (target != self.ingore_index)
-        input_flat = input[valid].contigous().view(-1)
-        target_flat = target[valid].contigous().view(-1)
+        # Apply softmax to input (model output)
+        input = torch.softmax(input, dim=1)
 
-        intersection = (input_flat * target_flat).sum()
+        dice_loss = 0.
 
-        dice_loss = 1 - ((2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth))
+        for class_index in range(input.size(1)):
+            valid = (target != self.ingore_index)
+            input_flat = input[:, class_index, :, :][valid].contiguous().view(-1)
+            target_flat = (target == class_index)[valid].contiguous().view(-1) # binary target for class_index
+
+            intersection = (input_flat * target_flat).sum()
+
+            dice_loss = 1 - ((2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth))
         
-        return 1 - dice_loss
-    
-class DiceBCELoss(nn.Module):
-    def __init__(self, ingore_index=255):
-        super(DiceBCELoss, self).__init__()
-        self.ingore_index = ingore_index
-        self.dice = DiceLoss(ingore_index)
-        self.bce = nn.BCEWithLogitsLoss()
+        mean_dice = dice_loss/input.size(1) # average loss over all classes
 
-    def forward(self, input, target):
-        dice_loss = self.dice(input, target)
-        BCE_loss = self.bce(input, target)
+        if self.log_loss:
+            mean_dice = -torch.log(mean_dice)
 
-        return dice_loss + BCE_loss
+        return mean_dice
