@@ -57,6 +57,7 @@ def visualize_segmentation_cityscapes(model, dataloader, coloring,  num_examples
                 break
             
             outputs = model(images)
+            print(outputs.shape)
             outputs = torch.softmax(outputs, dim=1)
             predicted = torch.argmax(outputs, 1)
 

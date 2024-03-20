@@ -23,8 +23,12 @@ class DiceLoss(nn.Module):
 
             intersection = (input_flat * target_flat).sum()
 
-            dice_loss = 1 - ((2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth))
-        
+            class_loss = 1 - ((2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth))
+            dice_loss += class_loss
+
+            print(f"Loss for class {class_index}: {class_loss.item()}")
+            print(f"Aggregated loss: {dice_loss.item()}")
+
         mean_dice = dice_loss/input.size(1) # average loss over all classes
 
         if self.log_loss:

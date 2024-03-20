@@ -241,7 +241,7 @@ def train_model_wandb_noval(model, train_loader, num_epochs=5, lr=0.01, patience
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Initialize best_train_loss here
-    best_train_loss = float('inf')
+    # best_train_loss = float('inf')
     previous_train_loss = float('inf')
     stagnation_count = 0
 
