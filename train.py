@@ -31,7 +31,7 @@ def main(args):
     # Define the transformations
     data_transforms = transforms.Compose([
         transforms.ToTensor(),  # Convert PIL Image to PyTorch Tensor
-        transforms.Resize((256,256), antialias=True),  # Resize the input image to the given size
+        transforms.Resize((512,512)),  # Resize the input image to the given size
     ])
 
     # Create transformed train dataset
@@ -46,10 +46,10 @@ def main(args):
     training_dataset, validation_dataset = torch.utils.data.random_split(training_dataset, [train_size, val_size])
 
     # Create Training and Validation DataLoaders
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=64, shuffle=True, num_workers=8,
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=32, shuffle=True, num_workers=8,
                                             pin_memory=True if torch.cuda.is_available() else False)
 
-    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=64, shuffle=True, num_workers=8,
+    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32, shuffle=True, num_workers=8,
                                             pin_memory=True if torch.cuda.is_available() else False)
 
     # Instanciate the model
