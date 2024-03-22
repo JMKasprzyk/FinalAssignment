@@ -2,7 +2,9 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
+import utils
 from utils import LABELS
+
 
 def mask_to_rgb(mask, class_to_color):
     """
@@ -28,6 +30,8 @@ def mask_to_rgb(mask, class_to_color):
         # Assign RGB color to the corresponding pixels
         rgb_mask[class_pixels] = color
 
+
+
     return rgb_mask
 
 def renormalize_image(image):
@@ -45,9 +49,13 @@ def renormalize_image(image):
     renormalized_image = image * std + mean
     return renormalized_image
 
-def visualize_segmentation_cityscapes(model, dataloader, coloring,  num_examples=5):
+def visualize_segmentation_cityscapes(model, dataloader, num_examples=5):
 
-    # class_colors = {i: color for i, color in enumerate(label.color for label in LABELS)}
+    # Create a mapping from trainId to color
+    trainId_to_color_pred = {label.trainId: label.color for label in LABELS if label.trainId != 255}
+    # trainId_to_color_gt = {label.id: label.color for label in LABELS if label.trainId != 255}
+    # trainId_to_name = {label.trainId: label.name for label in LABELS if label.trainId != 255}
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model.eval()
     with torch.no_grad():
@@ -57,13 +65,14 @@ def visualize_segmentation_cityscapes(model, dataloader, coloring,  num_examples
                 break
             
             outputs = model(images)
-            print(outputs.shape)
             outputs = torch.softmax(outputs, dim=1)
             predicted = torch.argmax(outputs, 1)
 
             images = images.numpy()
-            masks = masks.numpy() * 255
-            predicted = predicted.numpy()
+            masks = (masks*255).long().squeeze()     #*255 because the id are normalized between 0-1
+            masks = utils.map_id_to_train_id(masks).to(device)
+            masks = masks.cpu().numpy()
+            predicted = predicted.cpu().numpy()
 
             for j in range(images.shape[0]):
                 image = renormalize_image(images[j].transpose(1, 2, 0))
@@ -71,8 +80,8 @@ def visualize_segmentation_cityscapes(model, dataloader, coloring,  num_examples
                 mask = masks[j].squeeze()
                 pred_mask = predicted[j]
 
-                mask_rgb = mask_to_rgb(mask, coloring)
-                pred_mask_rgb = mask_to_rgb(pred_mask, coloring)
+                mask_rgb = mask_to_rgb(mask, trainId_to_color_pred)
+                pred_mask_rgb = mask_to_rgb(pred_mask, trainId_to_color_pred)
 
                 unique_classes_gt = np.unique(mask)
                 unique_classes_pred = np.unique(pred_mask)
@@ -83,8 +92,8 @@ def visualize_segmentation_cityscapes(model, dataloader, coloring,  num_examples
                 unique_classes_gt[unique_classes_gt == 255] = 0
                 unique_classes_pred[unique_classes_pred == 255] = 0
 
-                # classes_gt = [class_names_cityscapes[int(idx)] for idx in unique_classes_gt]
-                # classes_pred = [class_names_cityscapes[int(idx)] for idx in unique_classes_pred]
+                # classes_gt = [trainId_to_name[int(idx)] for idx in unique_classes_gt]
+                # classes_pred = [trainId_to_name[int(idx)] for idx in unique_classes_pred]
 
                 plt.figure(figsize=(10, 5))
                 plt.subplot(1, 3, 1)
