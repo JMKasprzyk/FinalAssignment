@@ -46,10 +46,10 @@ def main(args):
     training_dataset, validation_dataset = torch.utils.data.random_split(training_dataset, [train_size, val_size])
 
     # Create Training and Validation DataLoaders
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=16, shuffle=True, num_workers=8,
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=32, shuffle=True, num_workers=8,
                                             pin_memory=True if torch.cuda.is_available() else False)
 
-    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=16, shuffle=True, num_workers=8,
+    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32, shuffle=True, num_workers=8,
                                             pin_memory=True if torch.cuda.is_available() else False)
 
     # Instanciate the model
@@ -60,7 +60,8 @@ def main(args):
     UNet_model = UNet_model.to(device)
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    criterion = L.DiceLoss(ignore_index=255)
+    criterion = nn.CrossEntropyLoss(ignore_index=255)
+    # criterion = L.DiceLoss(ignore_index=255)
     optimizer = optim.Adam(UNet_model.parameters(), lr=args.lr)
 
 
