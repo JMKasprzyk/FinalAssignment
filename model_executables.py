@@ -30,8 +30,10 @@ def train_model(model, train_loader, val_loader, num_epochs=5, patience=3, optim
             inputs, masks = inputs.to(device), masks.to(device)
             # FORWARD PASS
             outputs = model(inputs)
+            print(outputs.shape)
             masks = (masks*255).long().squeeze()     #*255 because the id are normalized between 0-1
             masks = utils.map_id_to_train_id(masks).to(device)
+            print(torch.unique(masks))
             loss = criterion(outputs, masks)
             # BACKWARD PASS
             optimizer.zero_grad()

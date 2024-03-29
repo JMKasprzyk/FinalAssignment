@@ -91,7 +91,7 @@ class decoder_block(nn.Module):
         return x
     
 class R2U_Net(nn.Module):
-    def __init__(self,in_c=3,out_c=1,t=2):
+    def __init__(self,in_c=3,out_c=34,t=2):
         super(R2U_Net,self).__init__()
 
         filters = [64, 128, 256, 512, 1024]

@@ -69,7 +69,7 @@ class conv_block(nn.Module):
         x = self.bn2(x)
         x = self.relu(x)
 
-        print("Shape of conv_block output: ", x.shape)
+        # print("Shape of conv_block output: ", x.shape)
 
         return x
 
@@ -107,6 +107,6 @@ class decoder_block(nn.Module):
         x = torch.cat([x, skip], axis=1)
         x = self.conv(x)
 
-        print("Shape after deconvolution: ", x.shape)
+        # print("Shape after deconvolution: ", x.shape)
 
         return x
