@@ -24,7 +24,7 @@ class conv_block_2x2(nn.Module):
             nn.Conv2d(in_c, out_c, kernel_size=2, padding=1, bias=True),
             nn.BatchNorm2d(out_c),
             nn.ReLU(inplace=True),
-            nn.Conv2d(in_c, out_c, kernel_size=2, padding=1, bias=True),
+            nn.Conv2d(out_c, out_c, kernel_size=2, padding=1, bias=True),
             nn.BatchNorm2d(out_c),
             nn.ReLU(inplace=True)
         )
@@ -128,13 +128,9 @@ class MS_block_37(nn.Module):
 
     def forward(self, inputs):
         x3 = self.conv_block_3x3(inputs)
-        print("Shape of MS_block_37 3x3 output: ", x3.shape)
         x7 = self.conv_block_7x7(inputs)
-        print("Shape of MS_block_37 7x7 output: ", x7.shape)
         x = torch.cat([x3, x7], axis=1)
         x = self.conv_1x1(x)
-        print("Shape of MS_block_37 output: ", x.shape)
-
         return x
     
 class deconv_block_2x2(nn.Module):
@@ -152,8 +148,6 @@ class deconv_block_2x2(nn.Module):
 
     def forward(self, inputs):
         x = self.up(inputs)
-
-        print("Shape after deconvolution: ", x.shape)
 
         return x
     
@@ -186,7 +180,7 @@ class decoder_block(nn.Module):
         return x
 
 class MSU_Net(nn.Module):
-    def __init__(self, in_c, out_c):
+    def __init__(self, in_c=3, out_c=64):
         super(MSU_Net, self).__init__()
 
         filters = [64, 128, 256, 512, 1024]
