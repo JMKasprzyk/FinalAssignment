@@ -61,6 +61,10 @@ def main(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     UNet_model = UNet_model.to(device)
 
+    # Wrap the model with DataParallel
+    if torch.cuda.device_count() > 1:
+        UNet_model = torch.nn.DataParallel(UNet_model)
+
     # define optimizer and loss function (don't forget to ignore class index 255)
     criterion = nn.CrossEntropyLoss(ignore_index=255)
     # criterion = L.DiceLoss(ignore_index=255)
