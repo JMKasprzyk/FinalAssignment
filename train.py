@@ -4,7 +4,8 @@ avoid any global variables.
 """
 import torch
 # from model import Model
-from models import MSU_Net
+# from models import MSU_Net
+from RCNN_UNet import R2U_Net
 from model_executables import train_model_wandb
 import losses as L
 from torchvision.datasets import Cityscapes
@@ -22,6 +23,8 @@ def get_arg_parser():
     parser.add_argument("--epochs", type=int, default=100, help="Number of epochs to train the model")
     parser.add_argument("--lr", type=float, default=0.01, help="Learning rate for the optimizer")
     parser.add_argument("--wandb_name", type=str, default="Default-UNet-with-Validation", help="Name of the wandb log")
+    parser.add_argument("--checkpoint_folder", type=str, default=".", help="Name of the folder to which the checkpoints will be saved")
+    parser.add_argument('--architecture', type=str, default='U-Net', help='Model architecture to use.')
     """add more arguments here and change the default values to your needs in the run_container.sh file"""
     return parser
 
@@ -47,14 +50,12 @@ def main(args):
     training_dataset, validation_dataset = torch.utils.data.random_split(training_dataset, [train_size, val_size])
 
     # Create Training and Validation DataLoaders
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=8, shuffle=True, num_workers=8,
-                                            pin_memory=True if torch.cuda.is_available() else False)
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=8, shuffle=True, num_workers=8)
 
-    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=8, shuffle=True, num_workers=8,
-                                            pin_memory=True if torch.cuda.is_available() else False)
+    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=8, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = MSU_Net()
+    UNet_model = R2U_Net()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -74,14 +75,16 @@ def main(args):
         # track hyperparameters and run metadata
         config={
         "learning_rate": args.lr,
-        "architecture": "MSU-Net",
+        "architecture": args.architecture,
         "dataset": "Cityspace",
         "epochs": args.epochs,
         }
     )
 
     # Train the instanciated model
-    train_model_wandb(model=UNet_model, train_loader=train_loader, val_loader=val_loader, num_epochs=args.epochs, criterion=criterion, optimizer=optimizer, patience=4)
+    train_model_wandb(model=UNet_model, train_loader=train_loader, val_loader=val_loader,
+                    num_epochs=args.epochs, criterion=criterion, optimizer=optimizer, patience=4,
+                    checkpoint_dir=args.checkpoint_folder)
 
     # [optional] finish the wandb run, necessary in notebooks
     wandb.finish()

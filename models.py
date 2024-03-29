@@ -140,7 +140,7 @@ class deconv_block_2x2(nn.Module):
             self.deconv = nn.Sequential(
                 nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
                 nn.Conv2d(in_c, out_c, kernel_size=1, stride=1, padding=0, bias=True),
-                nn.BatchNorm2d(in_c),
+                nn.BatchNorm2d(out_c),
                 nn.ReLU(inplace=True)
             )
         else:

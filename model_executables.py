@@ -139,10 +139,10 @@ def train_model_noval(model, train_loader, num_epochs=5, lr=0.01, patience=3):
     save_checkpoint(model, optimizer, epoch, best_train_loss)
 
 
-def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=None, optimizer=None, patience=3):
+def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=None, optimizer=None, patience=3, checkpoint_dir='checkpoints'):
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    best_val_loss = float('inf')
+    # best_val_loss = float('inf')
 
     # Create and open a text file
 
@@ -191,7 +191,7 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             epoch_val_loss = running_val_loss / len(val_loader)
         # Save checkpoint every 5th epoch starting from the 30th epoch
         if (epoch + 1) % 2 == 0 and epoch >= 39:
-            save_checkpoint(model,epoch)
+            save_checkpoint(model,epoch, checkpoint_dir)
 
         # Calculate and print accuracy
         accuracy_train = total_correct_train / total_samples_train
