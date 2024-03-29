@@ -3,7 +3,8 @@ This file needs to contain the main training loop. The training code should be e
 avoid any global variables.
 """
 import torch
-from model import Model
+# from model import Model
+from models import MSU_Net
 from model_executables import train_model_wandb
 import losses as L
 from torchvision.datasets import Cityscapes
@@ -53,7 +54,7 @@ def main(args):
                                             pin_memory=True if torch.cuda.is_available() else False)
 
     # Instanciate the model
-    UNet_model = Model()
+    UNet_model = MSU_Net()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -73,7 +74,7 @@ def main(args):
         # track hyperparameters and run metadata
         config={
         "learning_rate": args.lr,
-        "architecture": "UNet",
+        "architecture": "MSU-Net",
         "dataset": "Cityspace",
         "epochs": args.epochs,
         }
