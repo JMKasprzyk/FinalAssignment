@@ -162,10 +162,10 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             optimizer.zero_grad()
             # FORWARD PASS
             outputs = model(inputs)
-            print(outputs.shape)
+            # print(outputs.shape)
             masks = (masks*255).long().squeeze()     #*255 because the id are normalized between 0-1
             masks = utils.map_id_to_train_id(masks).to(device)
-            print(torch.unique(masks))
+            # print(torch.unique(masks))
             loss = criterion(outputs, masks)
             # BACKWARD PASS
             loss.backward()

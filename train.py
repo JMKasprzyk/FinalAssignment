@@ -44,16 +44,16 @@ def main(args):
 
     # Determine the lengths of the training and validation sets
     total_size = len(training_dataset)
-    train_size = int(0.9 * total_size)  # 80% for training
+    train_size = int(0.8 * total_size)  # 80% for training
     val_size = total_size - train_size  # 10% for validation
 
     # Shuffle and Split the train dataset
     training_dataset, validation_dataset = torch.utils.data.random_split(training_dataset, [train_size, val_size])
 
     # Create Training and Validation DataLoaders
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=16, shuffle=True, num_workers=8)
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=8, shuffle=True, num_workers=4)
 
-    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=16, shuffle=True, num_workers=8)
+    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=8, shuffle=True, num_workers=4)
 
     # Instanciate the model
     UNet_model = ResUNet()
