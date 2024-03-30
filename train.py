@@ -5,7 +5,8 @@ avoid any global variables.
 import torch
 # from model import Model
 # from models import MSU_Net
-from RCNN_UNet import R2U_Net
+# from RCNN_UNet import R2U_Net
+from ResUNet import ResUNet
 from model_executables import train_model_wandb
 import losses as L
 from torchvision.datasets import Cityscapes
@@ -43,19 +44,19 @@ def main(args):
 
     # Determine the lengths of the training and validation sets
     total_size = len(training_dataset)
-    train_size = int(0.8 * total_size)  # 80% for training
-    val_size = total_size - train_size  # 20% for validation
+    train_size = int(0.9 * total_size)  # 80% for training
+    val_size = total_size - train_size  # 10% for validation
 
     # Shuffle and Split the train dataset
     training_dataset, validation_dataset = torch.utils.data.random_split(training_dataset, [train_size, val_size])
 
     # Create Training and Validation DataLoaders
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=8, shuffle=True, num_workers=8)
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=16, shuffle=True, num_workers=8)
 
-    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=8, shuffle=True, num_workers=8)
+    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=16, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = R2U_Net()
+    UNet_model = ResUNet()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
