@@ -80,7 +80,7 @@ class decoder_block(nn.Module):
     def __init__(self, in_c, out_c, t):
         super().__init__()
 
-        self.up = deconv_block_2x2(in_c, out_c, bilinear=True)
+        self.up = deconv_block_2x2(in_c, out_c, bilinear=False)
         self.conv = RRCNN_block(in_c, out_c)
 
     def forward(self, inputs, skip):
