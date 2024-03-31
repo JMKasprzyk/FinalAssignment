@@ -18,91 +18,46 @@ class conv_block(nn.Module):
         return x
     
 
-class deconv_block_2x2(nn.Module):
-    def __init__(self, in_c, out_c, bilinear=False):
-        super(deconv_block_2x2, self).__init__()
-        if bilinear:
-            self.deconv = nn.Sequential(
-                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-                nn.Conv2d(in_c, out_c, kernel_size=1, stride=1, padding=0, bias=True),
-                nn.BatchNorm2d(out_c),
-                nn.ReLU(inplace=True)
-            )
-        else:
-            self.up = nn.ConvTranspose2d(in_c, out_c, kernel_size=2, stride=2, padding=0, bias=True)
+class AttentionGate(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        """
+        Attention Gate for Attention UNet, which allows the network to focus on the certatin regions of the input image during training.
+        Implemenation based on the paper: https://arxiv.org/pdf/1804.03999.pdf 
 
-    def forward(self, inputs):
-        x = self.up(inputs)
-
-        return x
-
-class attention_gate(nn.Module):
-    def __init__(self, F_g, F_l, F_int):
-        super(attention_gate, self).__init__()
+        Args:
+            in_ch (list):   A list containing two elements. The first element is the number of channels in 'g' 
+                            (the output of the previous layer), and the second element is the number of channels 
+                            in 'x' (the skip connection from the encoder).
+            out_ch (int):   The number of output channels for the attention gate.
+        """
+        super(AttentionGate, self).__init__()
 
         self.W_g = nn.Sequential(
-            nn.Conv2d(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(F_int)
+            nn.Conv2d(in_ch[0], out_ch, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(out_ch)
         )
 
         self.W_x = nn.Sequential(
-            nn.Conv2d(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(F_int)
+            nn.Conv2d(in_ch[1], out_ch, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(out_ch)
         )
 
         self.psi = nn.Sequential(
-            nn.Conv2d(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(1),
+            nn.Conv2d(out_ch, out_ch, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(out_ch),
             nn.Sigmoid()
         )
 
         self.relu = nn.ReLU()
 
-    def forward(self, g, x):
-        g1 = self.W_g(g)
-        x1 = self.W_x(x)
+    def forward(self, g, inputs):
+        Wg = self.W_g(g)
+        Wx = self.W_x(inputs)
 
-        psi = self.relu(g1 + x1)
+        psi = self.relu(Wg + Wx)
         psi = self.psi(psi)
 
-        return x * psi
-
-class Attention_Block(nn.Module):
-    def __init__(self, in_channels, inter_channels):
-        super(Attention_Block, self).__init__()
-
-        self.W_g = nn.Sequential(
-            nn.Conv2d(in_channels[0], inter_channels, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(inter_channels)
-        )
-
-        self.W_x = nn.Sequential(
-            nn.Conv2d(in_channels[1], inter_channels, kernel_size=3, stride=2, padding=1, bias=True),
-        )
-
-        self.psi = nn.Sequential(
-            nn.Conv2d(inter_channels, 1, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(1),
-            nn.Sigmoid()
-        )
-
-        self.relu = nn.ReLU(inplace=True)
-
-    def forward(self, x, g):
-        # Vector 'g' goes through a 1x1x1 convolution to retain its dimensions
-        Wg = self.W_g(g)
-
-        # Vector 'x' goes through a stided convolution to reduce its dimensions
-        Wx = self.W_x(x)
-
-        # Element-wise addition of the gating and x signals
-        add_xg = self.relu(Wg + Wx)
-
-        # 1x1x1 convolution + Sigmoid activation
-        psi = self.psi(add_xg)
-
-        return psi * x
-
+        return inputs * psi
 
 class encoder_block(nn.Module):
     def __init__(self, in_c, out_c):
@@ -122,7 +77,7 @@ class decoder_block(nn.Module):
         super().__init__()
 
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        self.Att = Attention_Block(in_c, out_c)
+        self.Att = AttentionGate(in_c, out_c)
         self.conv = conv_block(in_c[0] + out_c, out_c)
 
     def forward(self, inputs, skip):
@@ -172,46 +127,7 @@ class Att_UNet(nn.Module):
         out = self.conv(d4)
 
         return out
-    
-class Residual_block(nn.Module):
-    """
-    Residual Block for R2Unet_CNN 
-    checkout: Fig 4.: https://arxiv.org/ftp/arxiv/papers/1802/1802.06955.pdf
 
-    Conv_Layer -> BN -> ReLU -> Conv_Layer -> BN -> shortcut -> BN -> shortcut+BN -> ReLU
-    """
-    def __init__(self, in_ch, out_ch, filter_size):
-        super(Residual_block, self).__init__()
-
-        self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=filter_size, stride=1, padding=1)
-        self.bn1 = nn.BatchNorm2d(out_ch)
-        self.relu = nn.ReLU(inplace=True)
-
-        self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=filter_size, stride=1, padding=1)
-        self.bn2 = nn.BatchNorm2d(out_ch)
-        # self.relu = nn.ReLU(inplace=True)
-        
-        # Identity Mapping using 1x1 conv
-        self.shorcut = nn.Sequential(nn.Conv2d(in_ch, out_ch, kernel_size=1, stride=1, padding=0),
-                                    nn.BatchNorm2d(out_ch))
-
-    def forward(self, x):
-        residual = x
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-
-        shortcut = self.shorcut(residual)
-
-        # Addition
-        out += shortcut
-        out = self.relu(out)
-
-        return out
-    
 if __name__ == '__main__':
     x = torch.randn((8, 3, 512, 512)) # Batch size of 8, 3 channels, 512x512 image
     model = Att_UNet()

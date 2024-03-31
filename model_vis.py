@@ -30,8 +30,6 @@ def mask_to_rgb(mask, class_to_color):
         # Assign RGB color to the corresponding pixels
         rgb_mask[class_pixels] = color
 
-
-
     return rgb_mask
 
 def renormalize_image(image):
