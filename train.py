@@ -3,10 +3,10 @@ This file needs to contain the main training loop. The training code should be e
 avoid any global variables.
 """
 import torch
-from model import Model
+# from model import Model
 # from models import MSU_Net
 # from RCNN_UNet import R2U_Net
-# from ResUNet import ResUNet
+from ResUNet import ResUNet
 from Att_UNet import Att_UNet
 from model_executables import train_model_wandb
 import losses as L
@@ -37,7 +37,7 @@ def main(args):
     # Define the transformations
     data_transforms = transforms.Compose([
         transforms.ToTensor(),  # Convert PIL Image to PyTorch Tensor
-        transforms.Resize((512,512)),  # Resize the input image to the given size
+        transforms.Resize((256,256)),  # Resize the input image to the given size
     ])
 
     # Create transformed train dataset
@@ -52,12 +52,12 @@ def main(args):
     training_dataset, validation_dataset = torch.utils.data.random_split(training_dataset, [train_size, val_size])
 
     # Create Training and Validation DataLoaders
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=16, shuffle=True, num_workers=8)
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=32, shuffle=True, num_workers=8)
 
-    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=16, shuffle=True, num_workers=8)
+    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = Att_UNet()
+    UNet_model = ResUNet()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

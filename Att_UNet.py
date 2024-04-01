@@ -81,11 +81,11 @@ class decoder_block(nn.Module):
         self.conv = conv_block(in_c[0] + out_c, out_c)
 
     def forward(self, inputs, skip):
-        print("Shape of skip: ", skip.shape)
+        # print("Shape of skip: ", skip.shape)
         x = self.up(inputs)
-        print("Shape of upsampled input: ", x.shape)
+        # print("Shape of upsampled input: ", x.shape)
         att = self.Att(x, skip)
-        print("Shape of attention output: ", att.shape)
+        # print("Shape of attention output: ", att.shape)
         x = torch.cat([x, att], axis=1)
         x = self.conv(x)
 
