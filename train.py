@@ -68,8 +68,9 @@ def main(args):
     #     UNet_model = torch.nn.DataParallel(UNet_model)
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    criterion = nn.CrossEntropyLoss(ignore_index=255)
+    # criterion = nn.CrossEntropyLoss(ignore_index=255)
     # criterion = L.DiceLoss(ignore_index=255)
+    criterion = L.FocalLoss(ignore_index=255)
     optimizer = optim.Adam(UNet_model.parameters(), lr=args.lr)
 
 
