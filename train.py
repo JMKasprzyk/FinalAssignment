@@ -7,7 +7,7 @@ from model import Model
 # from models import MSU_Net
 # from RCNN_UNet import R2U_Net
 # from ResUNet import ResUNet
-# from Att_UNet import Att_UNet
+from Att_UNet import Att_UNet
 from model_executables import train_model_wandb
 import losses as L
 from torchvision.datasets import Cityscapes
@@ -57,18 +57,18 @@ def main(args):
     val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=16, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = Model()
+    UNet_model = Att_UNet()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     UNet_model = UNet_model.to(device)
 
-    # Wrap the model with DataParallel
-    if torch.cuda.device_count() > 1:
-        UNet_model = torch.nn.DataParallel(UNet_model)
+    # # Wrap the model with DataParallel
+    # if torch.cuda.device_count() > 1:
+    #     UNet_model = torch.nn.DataParallel(UNet_model)
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    criterion = L.FocalLoss(ignore_index=255)
+    criterion = nn.CrossEntropy(ignore_index=255)
     # criterion = L.DiceLoss(ignore_index=255)
     optimizer = optim.Adam(UNet_model.parameters(), lr=args.lr)
 
