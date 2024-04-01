@@ -57,7 +57,7 @@ def main(args):
     val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = ResUNet()
+    UNet_model = Att_UNet()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
