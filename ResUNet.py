@@ -114,7 +114,7 @@ class ResUNet(nn.Module):
 
         """ Output """
         self.output = nn.Conv2d(filters[0], out_ch, kernel_size=1, stride=1, padding=0)
-        self.sigmoid = nn.Sigmoid()
+        # self.sigmoid = nn.Sigmoid()
 
     def forward(self, inputs):
         """ Encoder 1 """
@@ -135,7 +135,7 @@ class ResUNet(nn.Module):
 
         """ Semantic Segmentation Output """
         output = self.output(d3)
-        output = self.sigmoid(output)
+        # output = self.sigmoid(output)
 
         return output
 
