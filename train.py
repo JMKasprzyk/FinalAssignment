@@ -6,7 +6,7 @@ import torch
 # from model import Model
 # from models import MSU_Net
 # from RCNN_UNet import R2U_Net
-from ResUNet import ResUNet
+# from ResUNet import ResUNet
 from Att_UNet import Att_UNet
 from model_executables import train_model_wandb
 import losses as L
@@ -67,8 +67,8 @@ def main(args):
     #     UNet_model = torch.nn.DataParallel(UNet_model)
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    criterion = nn.CrossEntropyLoss(ignore_index=255)
-    # criterion = L.DiceLoss(ignore_index=255)
+    # criterion = nn.CrossEntropyLoss(ignore_index=255)
+    criterion = L.DiceLoss(ignore_index=255)
     # criterion = L.FocalLoss(ignore_index=255)
     optimizer = optim.Adam(UNet_model.parameters(), lr=args.lr)
 
