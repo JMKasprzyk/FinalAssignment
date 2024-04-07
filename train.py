@@ -5,9 +5,9 @@ avoid any global variables.
 import torch
 # from model import Model
 # from models import MSU_Net
-# from RCNN_UNet import R2U_Net
+from R2_UNet import R2U_Net
 # from ResUNet import ResUNet
-from Att_UNet import Att_UNet
+# from Att_UNet import Att_UNet
 from model_executables import train_model_wandb
 import losses as L
 from torchvision.datasets import Cityscapes
@@ -45,7 +45,7 @@ def main(args):
 
     # Determine the lengths of the training and validation sets
     total_size = len(training_dataset)
-    train_size = int(0.9 * total_size)  # 80% for training
+    train_size = int(0.8 * total_size)  # 80% for training
     val_size = total_size - train_size  # 10% for validation
 
     # Shuffle and Split the train dataset
@@ -56,7 +56,7 @@ def main(args):
     val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = Att_UNet()
+    UNet_model = R2U_Net()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

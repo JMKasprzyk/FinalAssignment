@@ -8,6 +8,6 @@ wandb login
 torchrun --nnodes=1 --nproc_per_node=1 train.py \
         --data_path "/gpfs/work5/0/jhstue005/JHS_data/CityScapes"\
         --epochs 150 --lr 0.01\
-        --wandb_name "Att-UNet-metrics"\
-        --checkpoint_folder "checkpoints/Att-Unet-CE-metrics"\
-        --architecture "Att-UNet"
+        --wandb_name "R2-UNet-CE"\
+        --checkpoint_folder "checkpoints/R2-UNet-CE"\
+        --architecture "R2-UNet"
