@@ -33,26 +33,8 @@ class DiceLoss(nn.Module):
             mean_dice = -torch.log(mean_dice)
 
         return mean_dice
-    
-def IoU_score(target, prediction, ignore_index=255):
-    """
-    The implementation of the Intersection over Union (IoU) score, based on the paper: https://fse.studenttheses.ub.rug.nl/18139/1/AI_BA_2018_FlorisvanBeers.pdf Equation (2.3)
-    Args:
-        target (_type_): _description_
-        prediction (_type_): _description_
 
-    Returns:
-        _type_: _description_
-    """
-    mask = target != ignore_index
-    T = target[mask].flatten() # => T
-    P = prediction[mask].flatten() # => P
 
-    intersection = torch.sum(T * P)
-    epsilon = 0.1
-    IoU = (intersection + epsilon) / (torch.sum(T) + torch.sum(P) - intersection + epsilon)
-
-    return IoU
 
 class IoULoss(nn.Module):
     def __init__(self, ignore_index=255, log_loss=False):

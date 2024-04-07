@@ -3,6 +3,9 @@ print(torch.__version__)
 import torch.nn as nn
 import torch.optim as optim
 
+import losses as L
+import metrics as M
+
 import wandb
 import utils
 
@@ -13,9 +16,10 @@ def train_model(model, train_loader, val_loader, num_epochs=5, patience=3, optim
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Initialize best_val_loss here
-    best_val_loss = float('inf')
+    # best_val_loss = float('inf')
 
-    # Create and open a text file
+    # Create an instance of Metrics class
+    metrics = M.Metrics(ignore_index=255)
 
     for epoch in range(num_epochs):
         # Initialize accuracy variables for each epoch
@@ -23,6 +27,12 @@ def train_model(model, train_loader, val_loader, num_epochs=5, patience=3, optim
         total_correct_val, total_samples_val = 0, 0
 
         running_train_loss = 0.0
+        running_train_dice_score = 0.0
+        running_train_iou_score = 0.0
+        running_val_loss = 0.0
+        running_val_dice_score = 0.0
+        running_val_iou_score = 0.0
+
         # TRAINING
         model.train()
         for inputs, masks in train_loader:
@@ -33,21 +43,28 @@ def train_model(model, train_loader, val_loader, num_epochs=5, patience=3, optim
             # print(outputs.shape)
             masks = (masks*255).long().squeeze()     #*255 because the id are normalized between 0-1
             masks = utils.map_id_to_train_id(masks).to(device)
-            print(f"Targets: {torch.unique(masks)}")
             loss = criterion(outputs, masks)
             # BACKWARD PASS
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             running_train_loss += loss.item()
+            # Calcualte the metrics
+            # Dice scrore
+            dice_scrore = metrics.dice_score(outputs, masks)
+            running_train_dice_score += dice_scrore.item()
+            # IoU score
+            iou_score = metrics.IoU_score(outputs, masks)
+            running_train_iou_score += iou_score.item()
             # Compute training accuracy
             _, predicted = torch.max(outputs, 1)
             total_correct_train += (predicted == masks.long().squeeze()).sum().item()
             total_samples_train += masks.numel()
         train_epoch_loss = running_train_loss / len(train_loader)
+        train_epoch_dice_score = running_train_dice_score / len(train_loader)
+        train_epoch_iou_score = running_train_iou_score / len(train_loader)
         # VALIDATION
         model.eval()
-        running_val_loss = 0.0
         with torch.no_grad():
             for val_inputs, val_masks in val_loader:
                 # Move inputs and masks to the GPU
@@ -57,29 +74,40 @@ def train_model(model, train_loader, val_loader, num_epochs=5, patience=3, optim
                 val_masks = utils.map_id_to_train_id(val_masks).to(device)
                 val_loss = criterion(val_outputs, val_masks)
                 running_val_loss += val_loss.item()
+                # Calcualte the metrics
+                # Dice score
+                val_dice_score = metrics.dice_score(val_outputs, val_masks)
+                running_val_dice_score += val_dice_score.item()
+                # IoU score
+                val_iou_score = metrics.IoU_score(val_outputs, val_masks)
+                running_val_iou_score += val_iou_score.item()
                 # Compute validation accuracy
                 _, val_predicted = torch.max(val_outputs, 1)
                 total_correct_val += (val_predicted == val_masks.long().squeeze()).sum().item()
                 total_samples_val += val_masks.numel()
             epoch_val_loss = running_val_loss / len(val_loader)
-        # Early stopping functionality
-        if val_loss < best_val_loss:
-            best_val_loss = val_loss
-            num_consecutive_epoch_without_improve = 0
-        else:
-            num_consecutive_epoch_without_improve += 1
-        if num_consecutive_epoch_without_improve >= patience:
-            # Save the model to the checkpoint file
-            save_checkpoint(model, optimizer, epoch, best_val_loss)
-            print(f"EARLY STOPPING INVOKED: Training halted after {num_consecutive_epoch_without_improve} epochs without improvement.")
-            break
+            epoch_val_dice_score = running_val_dice_score / len(val_loader)
+            epoch_val_iou_score = running_val_iou_score / len(val_loader)
+        # # Early stopping functionality
+        # if val_loss < best_val_loss:
+        #     best_val_loss = val_loss
+        #     num_consecutive_epoch_without_improve = 0
+        # else:
+        #     num_consecutive_epoch_without_improve += 1
+        # if num_consecutive_epoch_without_improve >= patience:
+        #     # Save the model to the checkpoint file
+        #     save_checkpoint(model, optimizer, epoch, best_val_loss)
+        #     print(f"EARLY STOPPING INVOKED: Training halted after {num_consecutive_epoch_without_improve} epochs without improvement.")
+        #     break
         # Calculate and print accuracy
         accuracy_train = total_correct_train / total_samples_train
         accuracy_val = total_correct_val / total_samples_val
         # Write to the log file
         print(f'Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_epoch_loss:.4f},\
-                Train Accuracy: {accuracy_train:.4f}, Val Loss: {epoch_val_loss:.4f},\
-                Val Accuracy: {accuracy_val:.4f}\n')
+        Train Accuracy: {accuracy_train:.4f}, Train Dice Score: {train_epoch_dice_score:.4f},\
+        Train IoU Score: {train_epoch_iou_score:.4f},\
+        Val Loss: {epoch_val_loss:.4f}, Val Accuracy: {accuracy_val:.4f},\
+        Val Dice Score: {epoch_val_dice_score:.4f}, Val IoU Score: {epoch_val_iou_score:.4f}\n')
 
 def train_model_noval(model, train_loader, num_epochs=5, lr=0.01, patience=3):
     criterion = nn.CrossEntropyLoss(ignore_index=255)
@@ -146,13 +174,20 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     # best_val_loss = float('inf')
 
-    # Create and open a text file
+    # Create an instance of Metrics class
+    metrics = M.Metrics(ignore_index=255)
 
     for epoch in range(num_epochs):
         # Initialize accuracy variables for each epoch
         total_correct_train, total_samples_train = 0, 0
         total_correct_val, total_samples_val = 0, 0
+
         running_train_loss = 0.0
+        running_train_dice_score = 0.0
+        running_train_iou_score = 0.0
+        running_val_loss = 0.0
+        running_val_dice_score = 0.0
+        running_val_iou_score = 0.0
         # TRAINING
         model.train()
         
@@ -171,15 +206,23 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             loss.backward()
             optimizer.step()
             running_train_loss += loss.item()
+            # Calcualte the metrics
+            # Dice scrore
+            dice_scrore = metrics.dice_score(outputs, masks)
+            running_train_dice_score += dice_scrore.item()
+            # IoU score
+            iou_score = metrics.IoU_score(outputs, masks)
+            running_train_iou_score += iou_score.item()
             # Compute training accuracy
             _, predicted = torch.max(outputs, 1)
             total_correct_train += (predicted == masks.long().squeeze()).sum().item()
             total_samples_train += masks.numel()
         train_epoch_loss = running_train_loss / len(train_loader)
+        train_epoch_dice_score = running_train_dice_score / len(train_loader)
+        train_epoch_iou_score = running_train_iou_score / len(train_loader)
         # VALIDATION
         model.eval()
         with torch.no_grad():
-            running_val_loss = 0.0
             for val_inputs, val_masks in val_loader:
                 # Move inputs and masks to the GPU
                 val_inputs, val_masks = val_inputs.to(device), val_masks.to(device)
@@ -188,12 +231,21 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
                 val_masks = utils.map_id_to_train_id(val_masks).to(device)
                 val_loss = criterion(val_outputs, val_masks)
                 running_val_loss += val_loss.item()
+                # Calcualte the metrics
+                # Dice score
+                val_dice_score = metrics.dice_score(val_outputs, val_masks)
+                running_val_dice_score += val_dice_score.item()
+                # IoU score
+                val_iou_score = metrics.IoU_score(val_outputs, val_masks)
+                running_val_iou_score += val_iou_score.item()
                 # Compute validation accuracy
                 _, val_predicted = torch.max(val_outputs, 1)
                 total_correct_val += (val_predicted == val_masks.long().squeeze()).sum().item()
                 total_samples_val += val_masks.numel()
             epoch_val_loss = running_val_loss / len(val_loader)
-        # Save checkpoint every 5th epoch starting from the 30th epoch
+            epoch_val_dice_score = running_val_dice_score / len(val_loader)
+            epoch_val_iou_score = running_val_iou_score / len(val_loader)
+        # Save checkpoint every 2nd epoch starting from the 30th epoch
         if (epoch + 1) % 2 == 0 and epoch >= 39:
             save_checkpoint(model,epoch, checkpoint_dir)
 
@@ -206,7 +258,11 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             'Train Loss': train_epoch_loss,
             'Train Accuracy': accuracy_train,
             'Val Loss': epoch_val_loss,
-            'Val Accuracy': accuracy_val
+            'Val Accuracy': accuracy_val,
+            'Train Dice Score': train_epoch_dice_score,
+            'Train IoU Score': train_epoch_iou_score,
+            'Val Dice Score': epoch_val_dice_score,
+            'Val IoU Score': epoch_val_iou_score
         })
         # Write to the log file
         # file.write(f'Epoch {epoch + 1}/{num_epochs}, Train Loss: {train_epoch_loss:.4f}, Train Accuracy: {accuracy_train:.4f}, Val Loss: {epoch_val_loss:.4f}, Val Accuracy: {accuracy_val:.4f}\n')
