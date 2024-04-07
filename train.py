@@ -4,7 +4,7 @@ avoid any global variables.
 """
 import torch
 # from model import Model
-# from models import MSU_Net
+from MS_UNet import MSU_Net
 # from R2_UNet import R2U_Net
 # from R2AttU_Net import R2AttU_Net
 # from ResUNet import ResUNet
@@ -58,7 +58,7 @@ def main(args):
     val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = ResAttU_Net()
+    UNet_model = MSU_Net()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
