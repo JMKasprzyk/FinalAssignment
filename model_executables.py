@@ -54,7 +54,7 @@ def train_model(model, train_loader, val_loader, num_epochs=5, patience=3, optim
             dice_scrore = metrics.dice_score(outputs, masks)
             running_train_dice_score += dice_scrore.item()
             # IoU score
-            iou_score = metrics.IoU_score(outputs, masks)
+            iou_score = metrics.IoU_score(outputs, masks, weighted=True)
             running_train_iou_score += iou_score.item()
             # Compute training accuracy
             _, predicted = torch.max(outputs, 1)
@@ -79,7 +79,7 @@ def train_model(model, train_loader, val_loader, num_epochs=5, patience=3, optim
                 val_dice_score = metrics.dice_score(val_outputs, val_masks)
                 running_val_dice_score += val_dice_score.item()
                 # IoU score
-                val_iou_score = metrics.IoU_score(val_outputs, val_masks)
+                val_iou_score = metrics.IoU_score(val_outputs, val_masks, weighted=True)
                 running_val_iou_score += val_iou_score.item()
                 # Compute validation accuracy
                 _, val_predicted = torch.max(val_outputs, 1)
@@ -208,7 +208,7 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             running_train_loss += loss.item()
             # Calcualte the metrics
             # Dice scrore
-            dice_scrore = metrics.dice_score(outputs, masks)
+            dice_scrore = metrics.dice_score(outputs, masks, weighted=True)
             running_train_dice_score += dice_scrore.item()
             # IoU score
             iou_score = metrics.IoU_score(outputs, masks)
@@ -236,7 +236,7 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
                 val_dice_score = metrics.dice_score(val_outputs, val_masks)
                 running_val_dice_score += val_dice_score.item()
                 # IoU score
-                val_iou_score = metrics.IoU_score(val_outputs, val_masks)
+                val_iou_score = metrics.IoU_score(val_outputs, val_masks, weighted=True)
                 running_val_iou_score += val_iou_score.item()
                 # Compute validation accuracy
                 _, val_predicted = torch.max(val_outputs, 1)

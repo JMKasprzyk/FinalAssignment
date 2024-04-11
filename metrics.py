@@ -48,13 +48,13 @@ class Metrics:
 
         return mean_dice
 
-    def IoU_score(self, input, target):
+    def IoU_score(self, input, target, weighted=False):
         smooth = 1e-6
 
         # Apply softmax to input (model output)
         input = torch.softmax(input, dim=1)
 
-        iou_score = 0.
+        class_iou_scores = []
 
         for class_index in range(input.size(1)):
             valid = (target != self.ignore_index)
@@ -64,8 +64,18 @@ class Metrics:
             intersection = (input_flat * target_flat).sum()
 
             class_score = (intersection + smooth) / (input_flat.sum() + target_flat.sum() - intersection + smooth)
-            iou_score += class_score
+            class_iou_scores.append(class_score)
 
-        mean_iou = iou_score/input.size(1) # average score over all classes
+        if not weighted:
+            total_iou = sum(class_iou_scores)
+            mean_iou = total_iou / len(class_iou_scores) # average score over all classes
+            return mean_iou
 
-        return mean_iou
+        if weighted:
+            weighted_iou = 0.0
+            total_pixels = target.ne(self.ignore_index).sum().item() # total number of valid pixels
+            for class_index, iou in enumerate(class_iou_scores):
+                class_weight = target.eq(class_index).sum().item() / total_pixels
+                weighted_iou += class_weight * iou
+
+            return weighted_iou
