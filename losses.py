@@ -134,3 +134,45 @@ class CE_Dice_Loss(nn.Module):
         mean_dice = dice_loss / len(object_classes) if len(object_classes) > 0 else 0.
 
         return ce_loss + mean_dice
+    
+class CE_FL_Dice_Loss(nn.Module):
+    """
+    Combined CrossEntropy, Focal and Dice Loss: The CrossEntropyLoss and FocalLoss are calculated for all classes,
+    while the DiceLoss is calculated only for the "object" category classes.
+
+    The idea behind this loss is to help the Combined CrossEntropyLoss and FocalLoss to focus on the "object" category classes.
+    """
+    def __init__(self, ce_weight=None, ignore_index=255, log_dice_loss=False):
+        super(CE_FL_Dice_Loss, self).__init__()
+        self.ce_weight = ce_weight
+        self.dice_loss = DiceLoss(ignore_index=ignore_index, log_loss=log_dice_loss)
+        self.cross_entropy = nn.CrossEntropyLoss(weight=ce_weight, ignore_index=ignore_index)
+        self.focal_loss = FocalLoss(ignore_index=ignore_index)
+
+    def forward(self, input, target):
+        # Calculate CrossEntropyLoss
+        ce_loss = self.cross_entropy(input, target)
+
+        # Calculate FocalLoss
+        fl_loss = self.focal_loss(input, target)
+
+        # Get the classes in the "object" category
+        object_classes = [label.trainId for label in LABELS if label.category == 'object']
+
+        # Calculate DiceLoss only for the "object" category classes
+        dice_loss = 0.
+        smooth = 1.
+
+        for class_index in object_classes:
+            valid = (target == class_index)
+            input_flat = input[:, class_index, :, :][valid].contiguous().view(-1)
+            target_flat = (target == class_index)[valid].contiguous().view(-1)  # binary target for class_index
+
+            intersection = (input_flat * target_flat).sum()
+
+            class_loss = 1 - ((2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth))
+            dice_loss += class_loss
+
+        mean_dice = dice_loss / len(object_classes) if len(object_classes) > 0 else 0.
+
+        return ce_loss + fl_loss + mean_dice

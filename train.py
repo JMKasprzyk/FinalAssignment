@@ -72,7 +72,8 @@ def main(args):
     # criterion = nn.CrossEntropyLoss(ignore_index=255)
     # criterion = L.DiceLoss(ignore_index=255)
     # criterion = L.FocalLoss(ignore_index=255)
-    criterion = L.CE_Dice_Loss(ignore_index=255)
+    # criterion = L.CE_Dice_Loss(ignore_index=255)
+    criterion = L.CE_FL_Dice_Loss(ignore_index=255)
     optimizer = optim.Adam(UNet_model.parameters(), lr=args.lr)
 
 
