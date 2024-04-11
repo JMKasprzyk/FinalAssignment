@@ -208,10 +208,10 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             running_train_loss += loss.item()
             # Calcualte the metrics
             # Dice scrore
-            dice_scrore = metrics.dice_score(outputs, masks, weighted=True)
+            dice_scrore = metrics.dice_score(outputs, masks)
             running_train_dice_score += dice_scrore.item()
             # IoU score
-            iou_score = metrics.IoU_score(outputs, masks)
+            iou_score = metrics.IoU_score(outputs, masks, weighted=True)
             running_train_iou_score += iou_score.item()
             # Compute training accuracy
             _, predicted = torch.max(outputs, 1)
