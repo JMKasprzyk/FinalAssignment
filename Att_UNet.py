@@ -2,15 +2,17 @@ import torch
 import torch.nn as nn
 
 class conv_block(nn.Module):
-    def __init__(self, in_c, out_c):
+    def __init__(self, in_c, out_c, dropout_rate=None):
         super(conv_block, self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(in_c, out_c, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_c),
             nn.ReLU(inplace=True),
+            nn.Dropout(dropout_rate) if dropout_rate is not None else nn.Identity(),
             nn.Conv2d(out_c, out_c, kernel_size=3, padding=1),
             nn.BatchNorm2d(out_c),
-            nn.ReLU(inplace=True)
+            nn.ReLU(inplace=True),
+            nn.Dropout(dropout_rate) if dropout_rate is not None else nn.Identity(),
         )
 
     def forward(self, inputs):
@@ -60,10 +62,10 @@ class AttentionGate(nn.Module):
         return inputs * psi
 
 class encoder_block(nn.Module):
-    def __init__(self, in_c, out_c):
+    def __init__(self, in_c, out_c, drop_out=None):
         super().__init__()
 
-        self.conv = conv_block(in_c, out_c)
+        self.conv = conv_block(in_c, out_c, dropout_rate=drop_out)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
 
     def forward(self, inputs):
@@ -92,13 +94,13 @@ class decoder_block(nn.Module):
         return x
     
 class Att_UNet(nn.Module):
-    def __init__(self, in_c=3, out_c=34):
+    def __init__(self, in_c=3, out_c=19):
         super(Att_UNet, self).__init__()
 
         filters = [64, 128, 256, 512, 1024]
 
-        self.encoder1 = encoder_block(in_c, filters[0])
-        self.encoder2 = encoder_block(filters[0], filters[1])
+        self.encoder1 = encoder_block(in_c, filters[0], drop_out=0.3)
+        self.encoder2 = encoder_block(filters[0], filters[1], drop_out=0.1)
         self.encoder3 = encoder_block(filters[1], filters[2])
         self.encoder4 = encoder_block(filters[2], filters[3])
 
@@ -129,7 +131,7 @@ class Att_UNet(nn.Module):
         return out
 
 if __name__ == '__main__':
-    x = torch.randn((8, 3, 512, 512)) # Batch size of 8, 3 channels, 512x512 image
+    x = torch.randn((4, 3, 128, 128)) # Batch size of 8, 3 channels, 512x512 image
     model = Att_UNet()
     y = model(x)
     print(y.size())
