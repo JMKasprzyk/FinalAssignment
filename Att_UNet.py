@@ -99,8 +99,8 @@ class Att_UNet(nn.Module):
 
         filters = [64, 128, 256, 512, 1024]
 
-        self.encoder1 = encoder_block(in_c, filters[0], drop_out=0.3)
-        self.encoder2 = encoder_block(filters[0], filters[1], drop_out=0.1)
+        self.encoder1 = encoder_block(in_c, filters[0])
+        self.encoder2 = encoder_block(filters[0], filters[1])
         self.encoder3 = encoder_block(filters[1], filters[2])
         self.encoder4 = encoder_block(filters[2], filters[3])
 
