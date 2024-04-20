@@ -26,7 +26,7 @@ class Metrics:
     def __init__(self, ignore_index=255):
         self.ignore_index = ignore_index
 
-    def dice_score(self, input, target):
+    def Dice_score(self, input, target, weighted=False):
         smooth = 1.
 
         # Apply softmax to input (model output)
@@ -34,19 +34,36 @@ class Metrics:
 
         dice_score = 0.
 
-        for class_index in range(input.size(1)):
-            valid = (target != self.ignore_index)
-            input_flat = input[:, class_index, :, :][valid].contiguous().view(-1)
-            target_flat = (target == class_index)[valid].contiguous().view(-1) # binary target for class_index
+        if not weighted:
+            for class_index in range(input.size(1)):
+                valid = (target != self.ignore_index)
+                input_flat = input[:, class_index, :, :][valid].contiguous().view(-1)
+                target_flat = (target == class_index)[valid].contiguous().view(-1) # binary target for class_index
 
-            intersection = (input_flat * target_flat).sum()
+                intersection = (input_flat * target_flat).sum()
 
-            class_score = (2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth)
-            dice_score += class_score
+                class_score = (2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth)
+                dice_score += class_score
 
-        mean_dice = dice_score/input.size(1) # average score over all classes
+            mean_dice = dice_score/input.size(1) # average score over all classes
 
-        return mean_dice
+            return mean_dice
+        
+        if weighted:
+            total_pixels = target.ne(self.ignore_index).sum().item()  # total number of valid pixels
+    
+            for class_index in range(input.size(1)):
+                valid = (target != self.ignore_index)
+                input_flat = input[:, class_index, :, :][valid].contiguous().view(-1)
+                target_flat = (target == class_index)[valid].contiguous().view(-1)  # binary target for class_index
+    
+                intersection = (input_flat * target_flat).sum()
+    
+                class_score = (2. * intersection + smooth) / (input_flat.sum() + target_flat.sum() + smooth)
+                class_weight = target.eq(class_index).sum().item() / total_pixels
+                dice_score += class_weight * class_score
+    
+            return dice_score
 
     def IoU_score(self, input, target, weighted=False):
         smooth = 1e-6

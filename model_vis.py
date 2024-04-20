@@ -2,8 +2,11 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 import utils
 from utils import LABELS
+
+from metrics import Metrics
 
 
 def mask_to_rgb(mask, class_to_color):
@@ -47,28 +50,36 @@ def renormalize_image(image):
     renormalized_image = image * std + mean
     return renormalized_image
 
-def visualize_segmentation_cityscapes(model, dataloader, num_examples=5):
+def visualize_segmentation_cityscapes(model, dataloader, num_examples=5, global_title='UNet'):
 
     # Create a mapping from trainId to color
     trainId_to_color_pred = {label.trainId: label.color for label in LABELS if label.trainId != 255}
-    # trainId_to_color_gt = {label.id: label.color for label in LABELS if label.trainId != 255}
-    # trainId_to_name = {label.trainId: label.name for label in LABELS if label.trainId != 255}
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cpu') # 'cuda' if torch.cuda.is_available() else 'cpu'
 
     model.eval()
+    metrics = Metrics()
     with torch.no_grad():
         for i, (images, masks) in enumerate(dataloader):
-            images, masks = images.to('cpu'), masks.to('cpu') # moving the images and masks tensors to CPU asuming the model was moved CPU
+            images, masks = images.to(device), masks.to(device)
             if i >= num_examples:
                 break
-            
+
             outputs = model(images)
+            print(outputs.shape)
+            # outputs = torch.softmax(outputs, dim=1) # the metrics already aply the softmax inside the functions
+            masks = (masks*255).long().squeeze()     #*255 because the id are normalized between 0-1
+            masks = utils.map_id_to_train_id(masks).to(device)
+            # Calculate scores
+            iou_score = metrics.IoU_score(input=outputs, target=masks)
+            weighted_iou_score = metrics.IoU_score(input=outputs, target=masks, weighted=True)
+            dice_score = metrics.Dice_score(input=outputs, target=masks)
+            weighted_dice_score = metrics.Dice_score(input=outputs, target=masks, weighted=True)
+
             outputs = torch.softmax(outputs, dim=1)
             predicted = torch.argmax(outputs, 1)
 
-            images = images.numpy()
-            masks = (masks*255).long().squeeze()     #*255 because the id are normalized between 0-1
-            masks = utils.map_id_to_train_id(masks).to(device)
+            images = images.cpu().numpy()
+
             masks = masks.cpu().numpy()
             predicted = predicted.cpu().numpy()
 
@@ -81,19 +92,9 @@ def visualize_segmentation_cityscapes(model, dataloader, num_examples=5):
                 mask_rgb = mask_to_rgb(mask, trainId_to_color_pred)
                 pred_mask_rgb = mask_to_rgb(pred_mask, trainId_to_color_pred)
 
-                unique_classes_gt = np.unique(mask)
-                unique_classes_pred = np.unique(pred_mask)
-
-                unique_classes_gt = np.delete(unique_classes_gt, [0, -1])
-                unique_classes_pred = np.delete(unique_classes_pred, 0)
-
-                unique_classes_gt[unique_classes_gt == 255] = 0
-                unique_classes_pred[unique_classes_pred == 255] = 0
-
-                # classes_gt = [trainId_to_name[int(idx)] for idx in unique_classes_gt]
-                # classes_pred = [trainId_to_name[int(idx)] for idx in unique_classes_pred]
-
-                plt.figure(figsize=(10, 5))
+                fig = plt.figure(figsize=(10, 5))
+                plt.suptitle(f'{global_title}', fontweight='bold', fontsize=14)
+                fig.text(0.5, 0.88, f'IoU: {iou_score:.2f}          weighted IoU: {weighted_iou_score:.2f}          Dice score: {dice_score:.2f}            weighted Dice: {weighted_dice_score:.2f}', ha='center', va='center', fontsize=12, bbox=dict(facecolor='none', edgecolor='black', boxstyle='round,pad=0.5'))
                 plt.subplot(1, 3, 1)
                 plt.imshow(image)
                 plt.title('Image')
@@ -108,5 +109,7 @@ def visualize_segmentation_cityscapes(model, dataloader, num_examples=5):
                 plt.imshow(pred_mask_rgb)
                 plt.title('Predicted Mask')
                 plt.axis('off')
+
+                plt.tight_layout()
 
                 plt.show()

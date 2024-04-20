@@ -94,7 +94,7 @@ class decoder_block(nn.Module):
         return x
     
 class Att_UNet(nn.Module):
-    def __init__(self, in_c=3, out_c=19):
+    def __init__(self, in_c=3, out_c=34):
         super(Att_UNet, self).__init__()
 
         filters = [64, 128, 256, 512, 1024]
