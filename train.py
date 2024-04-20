@@ -4,11 +4,11 @@ avoid any global variables.
 """
 import torch
 #from model import Model
-# from MS_UNet import MSU_Net
+from MS_UNet import MSU_Net
 # from R2_UNet import R2U_Net
 # from R2AttU_Net import R2AttU_Net
 #from ResUNet import ResUNet
-from Res_Att_UNet import ResAttU_Net
+#from Res_Att_UNet import ResAttU_Net
 #from Att_UNet import Att_UNet
 from model_executables import train_model_wandb
 import losses as L
@@ -54,11 +54,11 @@ def main(args):
     training_dataset, validation_dataset = torch.utils.data.random_split(training_dataset, [train_size, val_size])
 
     # Create Training and Validation DataLoaders
-    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=40, shuffle=True, num_workers=8)
-    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=40, shuffle=True, num_workers=8)
+    train_loader = torch.utils.data.DataLoader(training_dataset, batch_size=32, shuffle=True, num_workers=8)
+    val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=32, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = ResAttU_Net()
+    UNet_model = MSU_Net()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -70,8 +70,8 @@ def main(args):
 
     # define optimizer and loss function (don't forget to ignore class index 255)
     #criterion = nn.CrossEntropyLoss(ignore_index=255)
-    #criterion = L.DiceLoss(ignore_index=255)
-    criterion = L.FocalLoss(ignore_index=255)
+    criterion = L.DiceLoss(ignore_index=255)
+    #criterion = L.FocalLoss(ignore_index=255)
     # criterion = L.CE_Dice_Loss(ignore_index=255)
     # criterion = L.CE_FL_Dice_Loss(ignore_index=255)
     optimizer = optim.Adam(UNet_model.parameters(), lr=args.lr)

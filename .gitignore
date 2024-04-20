@@ -6,6 +6,7 @@ __pycache__/
 /scrap/
 /ignore/
 /model_checkpoints/
+/final_checkpoints/
 
 # Ignore all the .txt. files
 
