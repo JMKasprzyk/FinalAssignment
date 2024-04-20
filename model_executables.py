@@ -208,7 +208,7 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             running_train_loss += loss.item()
             # Calcualte the metrics
             # Dice scrore
-            dice_scrore = metrics.dice_score(outputs, masks)
+            dice_scrore = metrics.Dice_score(outputs, masks)
             running_train_dice_score += dice_scrore.item()
             # IoU score
             iou_score = metrics.IoU_score(outputs, masks, weighted=True)
@@ -233,7 +233,7 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
                 running_val_loss += val_loss.item()
                 # Calcualte the metrics
                 # Dice score
-                val_dice_score = metrics.dice_score(val_outputs, val_masks)
+                val_dice_score = metrics.Dice_score(val_outputs, val_masks)
                 running_val_dice_score += val_dice_score.item()
                 # IoU score
                 val_iou_score = metrics.IoU_score(val_outputs, val_masks, weighted=True)
@@ -245,8 +245,8 @@ def train_model_wandb(model, train_loader, val_loader, num_epochs=5, criterion=N
             epoch_val_loss = running_val_loss / len(val_loader)
             epoch_val_dice_score = running_val_dice_score / len(val_loader)
             epoch_val_iou_score = running_val_iou_score / len(val_loader)
-        # Save checkpoint every 2nd epoch starting from the 30th epoch
-        if (epoch + 1) % 2 == 0 and epoch >= 39:
+        # Save checkpoint every 2nd epoch starting from the 50th epoch
+        if (epoch + 1) % 2 == 0 and epoch >= 49:
             save_checkpoint(model,epoch, checkpoint_dir)
 
         # Calculate and print accuracy
