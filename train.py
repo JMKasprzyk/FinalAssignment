@@ -3,7 +3,7 @@ This file needs to contain the main training loop. The training code should be e
 avoid any global variables.
 """
 import torch
-#from model import Model
+from model import Model
 # from MS_UNet import MSU_Net
 # from R2_UNet import R2U_Net
 # from R2AttU_Net import R2AttU_Net
@@ -58,7 +58,7 @@ def main(args):
     val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=40, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = Att_UNet()
+    UNet_model = Model()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -69,8 +69,8 @@ def main(args):
     #     UNet_model = torch.nn.DataParallel(UNet_model)
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    #criterion = nn.CrossEntropyLoss(ignore_index=255)
-    criterion = L.DiceLoss(ignore_index=255)
+    criterion = nn.CrossEntropyLoss(ignore_index=255)
+    #criterion = L.DiceLoss(ignore_index=255)
     #criterion = L.FocalLoss(ignore_index=255)
     # criterion = L.CE_Dice_Loss(ignore_index=255)
     # criterion = L.CE_FL_Dice_Loss(ignore_index=255)
