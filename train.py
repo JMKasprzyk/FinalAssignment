@@ -69,8 +69,8 @@ def main(args):
     #     UNet_model = torch.nn.DataParallel(UNet_model)
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    criterion = nn.CrossEntropyLoss(ignore_index=255)
-    #criterion = L.DiceLoss(ignore_index=255)
+    #criterion = nn.CrossEntropyLoss(ignore_index=255)
+    criterion = L.DiceLoss(ignore_index=255)
     #criterion = L.FocalLoss(ignore_index=255)
     # criterion = L.CE_Dice_Loss(ignore_index=255)
     # criterion = L.CE_FL_Dice_Loss(ignore_index=255)
