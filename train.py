@@ -7,8 +7,8 @@ import torch
 # from MS_UNet import MSU_Net
 # from R2_UNet import R2U_Net
 # from R2AttU_Net import R2AttU_Net
-# from ResUNet import ResUNet
-from Res_Att_UNet import ResAttU_Net
+from ResUNet import ResUNet
+#from Res_Att_UNet import ResAttU_Net
 #from Att_UNet import Att_UNet
 from model_executables import train_model_wandb
 import losses as L
@@ -58,7 +58,7 @@ def main(args):
     val_loader = torch.utils.data.DataLoader(validation_dataset, batch_size=40, shuffle=True, num_workers=8)
 
     # Instanciate the model
-    UNet_model = ResAttU_Net()
+    UNet_model = ResUNet()
 
     # Move the model to the GPu if avaliable
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
