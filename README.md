@@ -31,6 +31,8 @@ After cloning the repository, navigate to the project directory:
 cd FinalAssignment
 ```
 
+All the implementation utilize standard PyTorch libraries not additional instalations needed. In the `train.py` all the avaliable criterions and imported model architectures are commented. For ease of use you can comment out any model or criterion of choice and train on it.
+
 ### File Descriptions
 
 Here's a brief overview of the files you'll find in this repository:
@@ -56,9 +58,17 @@ Here's a brief overview of the files you'll find in this repository:
 
 - **`MS_UNet.py`** Multi-scale U-Net implementaion.
 
-- **`ResUNet.py`*** Residual U-Net implementaiton.
+- **`ResUNet.py`** Residual U-Net implementaiton.
 
-- 
+- **`Att_UNet.py`** Attetnion U-Net implementaiton.
+
+- **`Res_Att_UNet.py`** Residual Attention U-Net implementaion.
+
+- **`R2_UNet.py`** Recurrent Residual U-Net implementation. (requires further work)
+
+- **`R2Att_UNet.py** Recurrent Residual Attention U-Net implementation. (requires further work)
+
+- **`model_test.ipynb'** Jupyter notebook intended for visualization of models' semangic segmentaiton performance.
 
 ### Authors
 
