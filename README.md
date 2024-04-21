@@ -1,3 +1,10 @@
+# General information
+Codalab username: Jakub_Kasprzyk
+TU/e email: j.m.kasprzyk@student.tue.nl
+
+The neccessary checkpoint files required for running the visualizations and model evaluations in `model_test.ipynb` cna be found in the following OneDrive shared folder: https://tuenl-my.sharepoint.com/:f:/r/personal/j_m_kasprzyk_student_tue_nl/Documents/5LSM0-JKasprzyk-checkpointfiles/model_checkpoints?csf=1&web=1&e=CV7ywM
+
+
 # Final Assignment
 
 This repository serves as the starting kit for the 5LSM0 final assignment.
