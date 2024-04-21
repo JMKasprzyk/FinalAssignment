@@ -66,9 +66,9 @@ Here's a brief overview of the files you'll find in this repository:
 
 - **`R2_UNet.py`** Recurrent Residual U-Net implementation. (requires further work)
 
-- **`R2Att_UNet.py** Recurrent Residual Attention U-Net implementation. (requires further work)
+- **`R2Att_UNet.py`** Recurrent Residual Attention U-Net implementation. (requires further work)
 
-- **`model_test.ipynb'** Jupyter notebook intended for visualization of models' semangic segmentaiton performance.
+- **`model_test.ipynb`** Jupyter notebook intended for visualization of models' semangic segmentaiton performance.
 
 ### Authors
 
