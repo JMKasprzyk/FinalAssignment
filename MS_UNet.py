@@ -180,7 +180,7 @@ class decoder_block(nn.Module):
         return x
 
 class MSU_Net(nn.Module):
-    def __init__(self, in_c=3, out_c=64):
+    def __init__(self, in_c=3, out_c=34):
         super(MSU_Net, self).__init__()
 
         filters = [64, 128, 256, 512, 1024]

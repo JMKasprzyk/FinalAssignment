@@ -113,3 +113,69 @@ def visualize_segmentation_cityscapes(model, dataloader, num_examples=5, global_
                 plt.tight_layout()
 
                 plt.show()
+            
+def vis_grid_seg(model, dataloader, num_examples=4, global_title='UNet'):
+
+    # Create a mapping from trainId to color
+    trainId_to_color_pred = {label.trainId: label.color for label in LABELS if label.trainId != 255}
+    device = torch.device('cpu') # 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    model.eval()
+    metrics = Metrics()
+    fig, axs = plt.subplots(num_examples, 3, figsize=(15, 20))  # Create a 4x3 grid of subplots
+    samples = [0, 0, 4, 6]  # Specify the samples to visualize
+
+    with torch.no_grad():
+        for i, (images, masks) in enumerate(dataloader):
+            if i >= 2:  # Only process the first two batches
+                break
+
+            images, masks = images.to(device), masks.to(device)
+            outputs = model(images)
+            masks = (masks*255).long().squeeze()     #*255 because the id are normalized between 0-1
+            masks = utils.map_id_to_train_id(masks).to(device)
+
+            # Calculate scores
+            iou_score = metrics.IoU_score(input=outputs, target=masks)
+            weighted_iou_score = metrics.IoU_score(input=outputs, target=masks, weighted=True)
+            dice_score = metrics.Dice_score(input=outputs, target=masks)
+            weighted_dice_score = metrics.Dice_score(input=outputs, target=masks, weighted=True)
+
+            outputs = torch.softmax(outputs, dim=1)
+            predicted = torch.argmax(outputs, 1)
+
+            images = images.cpu().numpy()
+            masks = masks.cpu().numpy()
+            predicted = predicted.cpu().numpy()
+
+            for j in range(num_examples):
+                if i == 0 and j > 0:  # Only process the first sample from the first batch
+                    continue
+                if (i == 4 and j < 2) or (i == 6 and j < 2):  # Only process the 5th and 7th samples from the second batch
+                    continue
+
+                image = renormalize_image(images[samples[j]].transpose(1, 2, 0))
+                mask = masks[samples[j]].squeeze()
+                pred_mask = predicted[samples[j]]
+
+                # Overlay ignored pixels from ground truth mask onto predicted mask
+                pred_mask[mask == 255] = 255
+
+                mask_rgb = mask_to_rgb(mask, trainId_to_color_pred)
+                pred_mask_rgb = mask_to_rgb(pred_mask, trainId_to_color_pred)
+
+                axs[j, 0].imshow(image)
+                axs[j, 0].axis('off')
+
+                axs[j, 1].imshow(mask_rgb)
+                axs[j, 1].axis('off')
+
+                axs[j, 2].imshow(pred_mask_rgb)
+                axs[j, 2].axis('off')
+
+                # Add scores as titles
+                axs[j, 0].set_title(f'IoU: {iou_score:.2f}\nWeighted IoU: {weighted_iou_score:.2f}\nDice score: {dice_score:.2f}\nWeighted Dice: {weighted_dice_score:.2f}', fontsize=12)
+
+    plt.suptitle(f'{global_title}', fontweight='bold', fontsize=14)
+    plt.tight_layout()
+    plt.show()
