@@ -15,7 +15,7 @@ import losses as L
 from torchvision.datasets import Cityscapes
 from argparse import ArgumentParser
 import torchvision.transforms as transforms
-#import torch.nn as nn
+import torch.nn as nn
 import torch.optim as optim
 
 
@@ -69,9 +69,9 @@ def main(args):
     #     UNet_model = torch.nn.DataParallel(UNet_model)
 
     # define optimizer and loss function (don't forget to ignore class index 255)
-    #criterion = nn.CrossEntropyLoss(ignore_index=255)
+    criterion = nn.CrossEntropyLoss(ignore_index=255)
     #criterion = L.DiceLoss(ignore_index=255)
-    criterion = L.FocalLoss(ignore_index=255)
+    #criterion = L.FocalLoss(ignore_index=255)
     # criterion = L.CE_Dice_Loss(ignore_index=255)
     # criterion = L.CE_FL_Dice_Loss(ignore_index=255)
     optimizer = optim.Adam(UNet_model.parameters(), lr=args.lr)
