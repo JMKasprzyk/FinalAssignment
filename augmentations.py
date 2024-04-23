@@ -5,6 +5,7 @@ import random
 import torch
 from torchvision import transforms as T
 from torchvision.transforms import functional as F
+from torchvision.transforms.functional import to_tensor, to_pil_image
 
 
 
@@ -143,6 +144,26 @@ class RandomResizedCrop(T.RandomResizedCrop):
             F.resized_crop(img, i, j, h, w, self.size, self.interpolation),
             F.resized_crop(mask, i, j, h, w, self.size, Image.NEAREST),
         )
+    
+
+
+class AddFog(object):
+    """
+    Add fog to the image by adding a white layer with varying intensity.
+    """
+    def __init__(self, fog_intensity_min=0, fog_intensity_max=1, probability=0.5):
+        self.fog_intensity_min = fog_intensity_min
+        self.fog_intensity_max = fog_intensity_max
+        self.probability = probability
+
+    def __call__(self, img, mask):
+        if random.random() < self.probability:
+            img = to_tensor(img)  # Convert the image to a tensor
+            fog_intensity = random.uniform(self.fog_intensity_min, self.fog_intensity_max)
+            fog_layer = torch.ones_like(img) * 255 * fog_intensity
+            img = img * (1 - fog_intensity) + fog_layer * fog_intensity
+            img = to_pil_image(img)  # Convert the image back to a PIL Image
+        return img, mask
 
 class ToTensor(object):
     """
